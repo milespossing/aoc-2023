@@ -21,6 +21,7 @@ to generate this file without the comments in this block.
   , "node-fs"
   , "prelude"
   , "strings"
+  , "stringutils"
   , "tuples"
   ]
 , packages = ./packages.dhall
