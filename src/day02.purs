@@ -73,15 +73,16 @@ solve =
   ( Str.split (Str.Pattern "\n")
       >>> Array.filter (not <<< Str.null)
       >>> traverse parseGame
-      >>> -- TODO: Is there some kind of monoid or semigroup
-        -- I can implement here for the foldl to enable a more simple sum?
+      >>>
+       -- TODO: Is there some kind of monoid or semigroup -- I can implement here for the foldl to enable a more simple sum?
         map (Array.filter gameIsValid >>> Array.foldl (\acc -> \g -> acc + g.number) 0)
   )
 
 sum :: Array Int -> Int
 sum = Array.foldl (\a -> \b -> a + b) 0
 
-type GameSum = { r :: Int, g :: Int, b :: Int }
+type GameSum
+  = { r :: Int, g :: Int, b :: Int }
 
 maxSum :: GameSum -> CubeCombo -> GameSum
 maxSum g c = case c of
@@ -93,14 +94,13 @@ revealSum :: GameSum -> CubeReveal -> GameSum
 revealSum i = Array.foldl maxSum i
 
 toGameSum :: Array CubeReveal -> GameSum
-toGameSum = Array.foldl revealSum { r: 0, g: 0, b: 0 } 
+toGameSum = Array.foldl revealSum { r: 0, g: 0, b: 0 }
 
 toPower :: GameSum -> Int
 toPower { r, g, b } = r * g * b
 
 gameToPower :: Game -> Int
 gameToPower { number: _, reveals } = toPower $ toGameSum reveals
-
 
 solve02 :: String -> Either String Int
 solve02 =
