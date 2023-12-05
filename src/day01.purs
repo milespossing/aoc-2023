@@ -46,8 +46,8 @@ getFirstLast line = aux line (Tuple Nothing Nothing) where
             Tuple Nothing _ -> aux tail (Tuple (Just i) Nothing)
             Tuple f _ -> aux tail (Tuple f (Just i))
 
-solve01 :: String -> Int
-solve01 = (
+solve :: String -> Int
+solve = (
   split (Pattern "\n") >>>
   Array.filter (not <<< null) >>>
   map getFirstLast >>>
