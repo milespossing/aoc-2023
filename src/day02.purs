@@ -77,3 +77,35 @@ solve =
         -- I can implement here for the foldl to enable a more simple sum?
         map (Array.filter gameIsValid >>> Array.foldl (\acc -> \g -> acc + g.number) 0)
   )
+
+sum :: Array Int -> Int
+sum = Array.foldl (\a -> \b -> a + b) 0
+
+type GameSum = { r :: Int, g :: Int, b :: Int }
+
+maxSum :: GameSum -> CubeCombo -> GameSum
+maxSum g c = case c of
+  Tuple n Red -> { r: (max n g.r), g: g.g, b: g.b }
+  Tuple n Green -> { r: g.r, g: (max n g.g), b: g.b }
+  Tuple n Blue -> { r: g.r, g: g.g, b: (max n g.b) }
+
+revealSum :: GameSum -> CubeReveal -> GameSum
+revealSum i = Array.foldl maxSum i
+
+toGameSum :: Array CubeReveal -> GameSum
+toGameSum = Array.foldl revealSum { r: 0, g: 0, b: 0 } 
+
+toPower :: GameSum -> Int
+toPower { r, g, b } = r * g * b
+
+gameToPower :: Game -> Int
+gameToPower { number: _, reveals } = toPower $ toGameSum reveals
+
+
+solve02 :: String -> Either String Int
+solve02 =
+  ( Str.split (Str.Pattern "\n")
+      >>> Array.filter (not <<< Str.null)
+      >>> traverse parseGame
+      >>> map (map gameToPower >>> sum)
+  )

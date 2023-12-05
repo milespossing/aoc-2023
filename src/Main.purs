@@ -16,4 +16,5 @@ main = do
   file1 <- readFile "inputs/day01.txt"
   log ("Day 1: " <> show (Day01.solve file1))
   file2 <- readFile "inputs/day02.txt"
-  log ("Day 2: " <> show (Day02.solve file2))
+  log ("Day 2.1: " <> show (Day02.solve file2))
+  log ("Day 2.2: " <> show (Day02.solve02 file2))
