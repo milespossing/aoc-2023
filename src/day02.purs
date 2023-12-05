@@ -10,12 +10,19 @@ import Data.String as Str
 import Data.Tuple (Tuple(..))
 import Data.Maybe (Maybe(..), fromMaybe)
 
-data Color = Red | Blue | Green
+data Color
+  = Red
+  | Blue
+  | Green
 
-type CubeCombo = Tuple Int Color
-type CubeReveal = Array CubeCombo
+type CubeCombo
+  = Tuple Int Color
 
-type Game = { number :: Int, reveals :: Array CubeReveal }
+type CubeReveal
+  = Array CubeCombo
+
+type Game
+  = { number :: Int, reveals :: Array CubeReveal }
 
 parseColor :: String -> Maybe Color
 parseColor s = case Str.trim s of
@@ -26,9 +33,10 @@ parseColor s = case Str.trim s of
 
 parseCubeComb :: String -> Maybe CubeCombo
 parseCubeComb s = do
-  let parts = Str.split (Str.Pattern " ") s
+  let
+    parts = Str.split (Str.Pattern " ") s
   case parts of
-    [numStr, colorStr] -> do
+    [ numStr, colorStr ] -> do
       num <- fromString numStr
       color <- parseColor colorStr
       pure (Tuple num color)
@@ -40,8 +48,9 @@ parseCubeReveal s = traverse parseCubeComb $ Str.split (Str.Pattern ", ") $ Str.
 parseGame :: String -> Either String Game
 parseGame s = do
   case Str.split (Str.Pattern ": ") s of
-    [numStr, games] -> do
-      let gameString = fromMaybe "" $ Array.last $ Str.split (Str.Pattern " ") $ Str.trim numStr
+    [ numStr, games ] -> do
+      let
+        gameString = fromMaybe "" $ Array.last $ Str.split (Str.Pattern " ") $ Str.trim numStr
       gameNum <- note "Invalid game number" $ fromString gameString
       reveals <- note "Invalid cubes" $ traverse parseCubeReveal $ Str.split (Str.Pattern "; ") $ Str.trim games
       pure { number: gameNum, reveals: reveals }
@@ -60,12 +69,11 @@ gameIsValid :: Game -> Boolean
 gameIsValid { number: _, reveals } = all revealIsValid reveals
 
 solve :: String -> Either String Int
-solve = (
-     Str.split (Str.Pattern "\n") >>>
-     Array.filter (not <<< Str.null) >>>
-     traverse parseGame >>>
-     -- TODO: Is there some kind of monoid or semigroup
-     -- I can implement here for the foldl to enable a more simple sum?
-     map (Array.filter gameIsValid >>> Array.foldl (\acc -> \g -> acc + g.number) 0)
-)
-  
+solve =
+  ( Str.split (Str.Pattern "\n")
+      >>> Array.filter (not <<< Str.null)
+      >>> traverse parseGame
+      >>> -- TODO: Is there some kind of monoid or semigroup
+        -- I can implement here for the foldl to enable a more simple sum?
+        map (Array.filter gameIsValid >>> Array.foldl (\acc -> \g -> acc + g.number) 0)
+  )
