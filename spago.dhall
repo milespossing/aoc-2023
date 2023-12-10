@@ -13,7 +13,7 @@
   , "strings"
   , "stringutils"
   , "tuples"
-  , "unordered-collections"
+  , "unicode"
   ]
 , packages = ./packages.dhall
 , sources = [ "src/**/*.purs", "test/**/*.purs" ]

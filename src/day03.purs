@@ -1,80 +1,76 @@
 module Day03 where
 
 import Prelude
-import Data.Either (Either(..), note)
+import Utils
+import Effect (Effect)
+import Effect.Console (log)
+import Data.Either (Either(..))
+import Data.String as Str
+import Data.String.CodeUnits (charAt, uncons)
+import Data.CodePoint.Unicode (isDecDigit, isSymbol, decDigitToInt)
 import Data.Array as Array
 import Data.Maybe (Maybe(..))
-import Data.String as Str
-import Data.String.CodePoints (toCodePointArray, fromCodePointArray)
-import Data.String.CodeUnits (charAt)
-import Data.String.Regex (test, regex, noFlags)
 
-type Schematic = Array String
 
-type NumberPoint = { line :: Int, start :: Int, len :: Int, val :: Int }
-numberPoint :: Int -> Int -> Int -> Int -> NumberPoint
-numberPoint line start len val = { line: line, start: start, len: len, val: val }
-
-type SchematicCheck = Schematic -> NumberPoint -> Boolean
-
-checkLeft :: SchematicCheck
-checkLeft _ { start: 0 } = false
-checkLeft s { line, start } = case Array.index s line of
+pointIsSymbol :: Array String -> Int -> Int -> Boolean
+pointIsSymbol lines lineNum col = case Array.index lines lineNum of
   Nothing -> false
-  Just l -> case charAt (start - 1) l of
+  Just line -> case charAt col line of
     Nothing -> false
     Just '.' -> false
-    Just _ -> true
-checkRight :: SchematicCheck
-checkRight s { line, start, len } = case Array.index s line of
-  Nothing -> false
-  Just l -> case charAt (start + len + 1) l of
-    Nothing -> false
-    Just '.' -> false
-    Just _ -> true
+    Just c  -> not $ isDecDigit $ Str.codePointFromChar c
 
-getCharsAtLine :: Schematic -> Int -> Int -> Int -> Maybe String
-getCharsAtLine s line start len = do
-  l <- Array.index s line
-  let a = toCodePointArray l
-  let h = Array.drop start a
-  let c = Array.take len h
-  pure (fromCodePointArray c)
+hasNeighbor :: Array String -> Int -> Int -> Boolean
+hasNeighbor lines line col = 
+-- left
+  pointIsSymbol lines line (col - 1)
+-- right
+  || pointIsSymbol lines line (col + 1)
+-- above left
+  || pointIsSymbol lines (line - 1) (col - 1)
+-- bottom left
+  || pointIsSymbol lines (line + 1) (col - 1)
+-- above
+  || pointIsSymbol lines (line - 1) col
+-- below
+  || pointIsSymbol lines (line + 1) col
+-- above right
+  || pointIsSymbol lines (line - 1) (col + 1)
+-- below right
+  || pointIsSymbol lines (line + 1) (col + 1)
 
-findFirstNumber :: String -> Maybe Int
+getDigit :: Char -> Int
+getDigit c = case decDigitToInt $ Str.codePointFromChar c of
+  Nothing -> 0
+  Just i -> i
 
-getNextNumber :: String -> Array NumberPoint
-getNextNumber s = do
-  
-  regex "^(\\d+)" noFlags >>>
+charIsDec :: Char -> Boolean
+charIsDec = isDecDigit <<< Str.codePointFromChar
 
-getFromLine :: Int -> String -> Array NumberPoint
-getFromLine lineNumber line = aux (Tuple line 0) [] where
-  aux :: Int -> Int -> Tuple String Int -> Array NumberPoint -> Array NumberPoint
-  aux _ (Tuple "" _) acc -> acc
-  aux 
-do
-  let nextStr = match (regex "^(\\d+)" noFlags) line
+getNumbersForLine :: Array String -> Int -> String -> Array Int
+getNumbersForLine lines lineNumber line = aux 0 line 0 false [] where
+  aux :: Int -> String -> Int -> Boolean -> Array Int -> Array Int
+  aux i s current currentHasNeighbor acc = case uncons s of
+    Nothing | current > 0 && currentHasNeighbor -> Array.snoc acc current
+    Nothing -> acc
+  -- for digits
+    Just { head: c, tail } | charIsDec c ->
+      aux (i + 1) tail (current * 10 + getDigit c) (currentHasNeighbor || (hasNeighbor lines lineNumber i)) acc
+  -- for non digits when the last _was_ a digit
+    Just { head: _, tail } | current > 0 && currentHasNeighbor -> aux (i + 1) tail 0 false (Array.snoc acc current)
+  -- throw away and move forward
+    Just { head: _, tail } -> aux (i + 1) tail 0 false acc
 
-scan :: Schematic -> Array NumberPoint
-scan s = Array.concat $
-         Array.mapWithIndex getFromLine s
-  
+getNumbers :: Array String -> Array Int
+getNumbers lines = Array.concat $ Array.mapWithIndex (getNumbersForLine lines) lines
 
-hasChar :: Schematic -> NumberPoint -> Boolean
-hasChar s n = checkLeft s n && checkRight s n
-
-filterPoints :: Schematic -> Array NumberPoint -> Array NumberPoint
-filterPoints s = Array.filter (hasChar s)
-
-sumNumbers :: Array NumberPoint -> Int
-sumNumbers = Array.foldl (\acc -> \point -> acc + point.val) 0
-
-solve1 :: String -> Either String Int
+solve1 :: String -> Effect (Either String Int)
 solve1 file = do
-  let s = Array.filter (not <<< Str.null) $ Str.split (Str.Pattern "\n") file
-  nums <- scan s
-  pure (sumNumbers $ filterPoints s nums)
+  let lines = getLines file
+  let numbers = getNumbers lines
+  -- log (show numbers)
+  let result = Array.foldl (\a -> \b -> a + b) 0 numbers
+  pure (Right result)
 
 solve2 :: String -> Either String Int
 solve2 _ = Left "Not Implemented"
