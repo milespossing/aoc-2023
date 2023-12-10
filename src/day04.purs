@@ -14,7 +14,7 @@ import Data.Array.NonEmpty (NonEmptyArray(..))
 import Data.String as Str
 import Data.String.Regex (Regex(..), regex, match)
 import Data.String.Regex.Flags (noFlags)
-import Data.Int (fromString)
+import Data.Int (pow, fromString)
 
 
 type Side = Array Int
@@ -45,10 +45,6 @@ getCards regexp file = let
                lines = getLines file in
                traverse (parseCard regexp) lines
 
-doubleLastScore :: Int -> Int
-doubleLastScore 0 = 1
-doubleLastScore n = 2 * n
-
 scoreCard :: Card -> Int
 scoreCard (Tuple winners guesses) = let
   sortedWinners = Array.sort winners
@@ -61,22 +57,35 @@ scoreCard (Tuple winners guesses) = let
         (Tuple Nothing _) -> acc
         (Tuple _ Nothing) -> acc
         (Tuple (Just { head: head_a, tail: tail_a }) (Just { head: head_b, tail: tail_b })) | head_a == head_b ->
-               aux tail_a tail_b (doubleLastScore acc)
+               aux tail_a tail_b (acc + 1)
         (Tuple (Just { head: head_a, tail: tail_a }) (Just { head: head_b, tail: tail_b })) | head_a > head_b ->
                aux a tail_b acc
         (Tuple (Just { head: head_a, tail: tail_a }) (Just { head: head_b, tail: tail_b })) ->
                aux tail_a b acc
-               
-      
+
+scoreCard1 :: Int -> Int
+scoreCard1 0 = 0
+scoreCard1 i = pow 2 (i - 1)
 
 solve1 :: String -> Either String Int
 solve1 file = do
   regexp <- regex "Card +\\d+: ([\\d ]+) \\| ([\\d ]+)" noFlags
   cards <- getCards regexp file
-  let scores = map scoreCard cards
+  let scores = map scoreCard1 $ map scoreCard cards
   Right (sum scores)
 
+-- scoreCards2 :: Array Card -> Int
+-- scoreCards2 cards = aux cards Array.replicate (Array.length cards) 1 acc where
+--   aux :: Array Card -> Array Int -> Int -> Int
+--   aux c s acc = case Tuple (Array.uncons c) (Array.uncons s) of
+--       Tuple Nothing _ -> acc
+--       Tuple _ Nothing -> acc
+--       Tuple (Just { head: card, tail: rest }) (Just { head: copies, tail: rest_copies })
+      
 
-solve2 :: String -> Effect (Either String Int)
-solve2 _ = do
-  pure (Left "Not implemented")
+
+solve2 :: String -> Either String Int
+solve2 file = do
+  regexp <- regex "Card +\\d+: ([\\d ]+) \\| ([\\d ]+)" noFlags
+  cards <- getCards regexp file
+  Left "Not implemented"
