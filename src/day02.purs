@@ -73,8 +73,7 @@ solve =
   ( Str.split (Str.Pattern "\n")
       >>> Array.filter (not <<< Str.null)
       >>> traverse parseGame
-      >>>
-       -- TODO: Is there some kind of monoid or semigroup -- I can implement here for the foldl to enable a more simple sum?
+      >>> -- TODO: Is there some kind of monoid or semigroup -- I can implement here for the foldl to enable a more simple sum?
         map (Array.filter gameIsValid >>> Array.foldl (\acc -> \g -> acc + g.number) 0)
   )
 

@@ -25,7 +25,9 @@ main = do
   log ("Day 3.1: " <> show result3_1)
   log ("Day 3.2: " <> show (Day03.solve2 file3))
   file4 <- readFile "inputs/day04.txt"
-  let result4_1 = Day04.solve1 file4
-  let result4_2 = Day04.solve2 file4
+  let
+    result4_1 = Day04.solve1 file4
+  let
+    result4_2 = Day04.solve2 file4
   log ("Day 4.1: " <> show result4_1)
   log ("Day 4.2: " <> show result4_2)
